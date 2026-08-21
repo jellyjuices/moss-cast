@@ -26,10 +26,6 @@ export const PORT = 5901;
 export const FORMAT = process.env.CAST_FORMAT || "wav";
 export const MIME = FORMAT === "flac" ? "audio/flac" : "audio/wav";
 
-// Casting sends the audio to the Chromecast only. Set CAST_KEEP_LOCAL=1 (or pass
-// --keep-local) to use a Multi-Output Device instead and hear it here too.
-export const KEEP_LOCAL = process.env.CAST_KEEP_LOCAL === "1";
-
 // The swyh-rs audio server, prebuilt and self-contained (it links only against
 // macOS system frameworks, so there is no Rust toolchain to install).
 export const SWYH = join(ROOT, "bin", "swyh-rs-cli");

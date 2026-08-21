@@ -1,10 +1,10 @@
-// node scripts/cast.mjs --device "Kitchen speaker" [--keep-local]
+// node scripts/cast.mjs --device "Kitchen speaker"
 //
 // The headless twin of start.mjs, and what the menu bar starts. It has to stay in
 // the foreground: the Cast connection dies with the process, so cast-launch.sh
 // backgrounds it and stop.mjs signals it. Output goes to .state/cast.log.
 import { mkdirSync, writeFileSync } from "node:fs";
-import { STATE_DIR, STATE_FILE, KEEP_LOCAL } from "./lib/config.mjs";
+import { STATE_DIR, STATE_FILE } from "./lib/config.mjs";
 import { preflight } from "./lib/preflight.mjs";
 import { findByName } from "./lib/discover.mjs";
 import { startCasting } from "./lib/engine.mjs";
@@ -35,7 +35,6 @@ try {
   const device = findByName({ python, network, name: wanted, onNote: log });
   session = await startCasting({
     device,
-    keepLocal: KEEP_LOCAL || process.argv.includes("--keep-local"),
     onLog: log,
     onLost: (code) => {
       log(`Lost the connection to ${device.name} (code ${code}).`);

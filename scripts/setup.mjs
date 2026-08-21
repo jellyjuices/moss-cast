@@ -19,7 +19,7 @@ if (existsSync(SWYH)) {
   ok("audio server (bin/swyh-rs-cli)");
 } else {
   blocking++;
-  bad("audio server missing at bin/swyh-rs-cli", "See 'Rebuilding the audio server' in the README.");
+  bad("audio server missing at bin/swyh-rs-cli", "See the last section of the README for how to rebuild it.");
 }
 
 // --- the .app bundle that can hold a microphone grant ---
@@ -57,9 +57,6 @@ if (switcher) {
   ok("SwitchAudioSource");
   if (blackhole) {
     ok(`capture device: ${blackhole} (audio goes to the Chromecast only)`);
-    if (multi) {
-      console.log(`      ${color.dim(`--keep-local uses ${multi} instead, to hear it here too`)}`);
-    }
   } else if (multi) {
     ok(`capture device: ${multi} (this Mac stays audible while casting)`);
   } else {

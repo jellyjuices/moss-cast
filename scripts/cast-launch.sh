@@ -8,5 +8,5 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 source "$ROOT/scripts/lib/common.sh"
 
 mkdir -p "$ROOT/.state"
-nohup "$NODE" "$ROOT/scripts/cast.mjs" --device "$1" "${@:2}" >> "$ROOT/.state/cast.log" 2>&1 &
+nohup "$NODE" "$ROOT/scripts/cast.mjs" --device "$1" >> "$ROOT/.state/cast.log" 2>&1 &
 disown

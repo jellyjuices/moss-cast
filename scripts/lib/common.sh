@@ -24,3 +24,13 @@ find_node() {
 }
 
 NODE="$(find_node)"
+
+# Optional settings, for the menu bar: SwiftBar runs plugins with its own
+# environment, so CAST_* set in your shell profile never reaches them. cast.env
+# is untracked, so a git pull will not clobber it.
+CAST_ENV_FILE="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)/cast.env"
+if [[ -f "$CAST_ENV_FILE" ]]; then
+  set -a
+  source "$CAST_ENV_FILE"
+  set +a
+fi

@@ -4,19 +4,19 @@
 // dropdown. Every line takes `key=value` parameters after a `|`.
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { ROOT } from "./lib/config.mjs";
-import { currentNetwork } from "./lib/net.mjs";
-import { readCache } from "./lib/devices.mjs";
+import { PROJECT_ROOT } from "./lib/config.mjs";
+import { currentNetworkId } from "./lib/network.mjs";
+import { readDeviceCache } from "./lib/chromecast/cache.mjs";
 import * as session from "./lib/session.mjs";
 
 const NODE = process.execPath;
-const VOLUME = join(ROOT, "scripts", "volume.mjs");
-const LIST = join(ROOT, "scripts", "list.mjs");
+const VOLUME = join(PROJECT_ROOT, "scripts", "volume.mjs");
+const LIST = join(PROJECT_ROOT, "scripts", "list.mjs");
 
 // These live in scripts/, not swiftbar/: SwiftBar treats every executable in its
 // plugin folder as a plugin, and would give each one its own menu bar item.
-const LAUNCH = join(ROOT, "scripts", "cast-launch.sh");
-const STOP = join(ROOT, "scripts", "cast-stop.sh");
+const LAUNCH = join(PROJECT_ROOT, "scripts", "shell", "cast-launch.sh");
+const STOP = join(PROJECT_ROOT, "scripts", "shell", "cast-stop.sh");
 
 const line = (text, ...params) => console.log(params.length ? `${text} | ${params.join(" ")}` : text);
 const quote = (s) => `"${String(s).replace(/"/g, '\\"')}"`;
@@ -36,7 +36,7 @@ const runs = (script, ...args) => [
 const ICON_PT = 20;
 
 function icon(name, sfimage) {
-  const file = join(ROOT, "swiftbar", name);
+  const file = join(PROJECT_ROOT, "assets", "menubar", name);
   if (!existsSync(file)) return `sfimage=${sfimage}`;
   return `templateImage=${readFileSync(file).toString("base64")} width=${ICON_PT} height=${ICON_PT}`;
 }
@@ -96,7 +96,7 @@ if (casting) {
     separator();
   }
 
-  const devices = readCache(currentNetwork())?.devices ?? [];
+  const devices = readDeviceCache(currentNetworkId())?.devices ?? [];
 
   if (devices.length === 0) {
     line("No speakers remembered", "sfimage=questionmark.circle");

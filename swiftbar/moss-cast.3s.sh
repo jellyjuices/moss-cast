@@ -1,5 +1,5 @@
 #!/bin/bash
-# <bitbar.title>Cast Audio</bitbar.title>
+# <bitbar.title>Moss Cast</bitbar.title>
 # <bitbar.desc>Cast this Mac's system audio to a Chromecast.</bitbar.desc>
 # <bitbar.dependencies>node</bitbar.dependencies>
 #
@@ -16,6 +16,6 @@
 SELF="${BASH_SOURCE[0]}"
 while [[ -L "$SELF" ]]; do SELF="$(readlink "$SELF")"; done
 ROOT="$(cd "$(dirname "$SELF")/.." && pwd)"
-source "$ROOT/scripts/lib/common.sh"
+source "$ROOT/scripts/shell/common.sh"
 
 exec "$NODE" "$ROOT/scripts/menu.mjs"

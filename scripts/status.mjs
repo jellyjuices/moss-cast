@@ -1,16 +1,15 @@
-// node scripts/status.mjs - what is casting right now, as JSON.
 import * as session from "./lib/session.mjs";
 
-const out = (payload) => process.stdout.write(`${JSON.stringify(payload, null, 2)}\n`);
+const printJson = (payload) => process.stdout.write(`${JSON.stringify(payload, null, 2)}\n`);
 const state = session.read();
 
 if (!state) {
-  out({ casting: false });
+  printJson({ casting: false });
 } else if (state.error) {
-  out({ casting: false, error: state.error, failedAt: state.failedAt ?? null });
+  printJson({ casting: false, error: state.error, failedAt: state.failedAt ?? null });
 } else {
   const running = session.isRunning(state);
-  out({
+  printJson({
     casting: running,
     stale: !running,
     device: state.device ?? null,

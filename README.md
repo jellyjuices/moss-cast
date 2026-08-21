@@ -1,4 +1,4 @@
-# cast-audio
+# moss-cast
 
 Send macOS system audio to a Chromecast — from the terminal, or from the menu bar.
 
@@ -39,7 +39,7 @@ brew install uv && uv tool install catt
 **2. Clone and check.**
 
 ```sh
-git clone https://github.com/jjbastida/cast-audio.git && cd cast-audio
+git clone https://github.com/jjbastida/moss-cast.git && cd moss-cast
 node scripts/setup.mjs
 ```
 
@@ -51,7 +51,7 @@ when there is nothing left to fix.
 **3. Grant microphone permission.** macOS counts audio capture as microphone
 input, and this is the one step nobody can do for you. Open System Settings →
 Privacy & Security → Microphone and enable it for your terminal. The menu bar
-asks separately, for **Cast Audio Helper**, on your first cast from it — say yes.
+asks separately, for **Moss Cast Helper**, on your first cast from it — say yes.
 Skip this and you will cast perfect silence.
 
 ## Quick start
@@ -87,16 +87,16 @@ stopped from the menu bar, and the other way round.
 
 | Flag | Variable | |
 | --- | --- | --- |
-| `--rescan` | `CAST_RESCAN=1` | forget the remembered speakers and search the network again |
-| | `CAST_FORMAT=flac` | stream FLAC instead of WAV (see the troubleshooting note) |
-| | `CAST_NODE=/path/to/node` | where Node lives, if the menu bar cannot find it |
+| `--rescan` | `MOSS_RESCAN=1` | forget the remembered speakers and search the network again |
+| | `MOSS_FORMAT=flac` | stream FLAC instead of WAV (see the troubleshooting note) |
+| | `MOSS_NODE=/path/to/node` | where Node lives, if the menu bar cannot find it |
 
 The menu bar runs with SwiftBar's own environment, so variables exported in your
-shell profile never reach it. Put them in a `cast.env` file at the top of the
+shell profile never reach it. Put them in a `moss.env` file at the top of the
 repo instead, which both the terminal and the menu bar read:
 
 ```sh
-echo 'CAST_FORMAT=flac' > cast.env
+echo 'MOSS_FORMAT=flac' > moss.env
 ```
 
 It is untracked, so a `git pull` will not overwrite it.
@@ -110,8 +110,8 @@ missing tool or a revoked permission, and it names both. After that, the logs:
 **Silence, or silence only from the menu bar.** Almost always microphone
 permission. A bare binary launched from SwiftBar is denied without a prompt and
 captures digital silence rather than failing — which is why `setup.mjs` builds
-`bin/CastAudioHelper.app`, an app bundle that can hold the grant. Check that
-**Cast Audio Helper** appears, and is ticked, under Privacy & Security →
+`bin/MossCastHelper.app`, an app bundle that can hold the grant. Check that
+**Moss Cast Helper** appears, and is ticked, under Privacy & Security →
 Microphone.
 
 **The Chromecast connects but plays nothing.** You hear the cast chime, then
@@ -119,7 +119,7 @@ silence. If `server.log` says `Streaming to <ip> has ended` a second after it
 connected, the format is the problem: Chromecast will not hold an endless chunked
 stream with no declared duration. WAV is the default for exactly that reason.
 FLAC sounds better in theory and disconnects immediately on most Cast devices,
-but `CAST_FORMAT=flac node scripts/start.mjs` will try it.
+but `MOSS_FORMAT=flac node scripts/start.mjs` will try it.
 
 **My speaker is not in the list.** Same Wi-Fi as the Mac? The list is
 remembered between runs, so a speaker that has moved or changed IP needs
@@ -128,7 +128,7 @@ remembered between runs, so a speaker that has moved or changed IP needs
 **My Mac went quiet while casting.** By design: BlackHole has no speakers
 attached, so the audio goes only to the Chromecast. If you would rather hear
 both, make a Multi-Output Device in Audio MIDI Setup containing BlackHole and
-your speakers — cast-audio falls back to it when there is no plain BlackHole.
+your speakers — moss-cast falls back to it when there is no plain BlackHole.
 
 **Several seconds of delay.** That is Chromecast buffering, and it cannot be
 tuned away. Fine for music, not usable for video.

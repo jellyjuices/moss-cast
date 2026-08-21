@@ -4,7 +4,7 @@
 
 # Built by `node scripts/setup.mjs` from bin/swyh-rs-cli; the ad-hoc signature that carries
 # the microphone grant is only valid on the machine that built it.
-bin/CastAudioHelper.app/
+bin/MossCastHelper.app/
 
-# Optional local settings (CAST_FORMAT, CAST_NODE, ...).
-cast.env
+# Optional local settings (MOSS_NODE, ...).
+moss.env

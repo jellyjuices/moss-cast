@@ -1,4 +1,3 @@
-// Terminal odds and ends shared by the picker and the live status screen.
 export const ESC = "\u001b";
 
 export const KEY = {
@@ -9,7 +8,7 @@ export const KEY = {
   SPACE: " ",
 };
 
-const paint = (code) => (s) => `${ESC}[${code}m${s}${ESC}[0m`;
+const paint = (code) => (text) => `${ESC}[${code}m${text}${ESC}[0m`;
 
 export const color = {
   dim: paint(2),

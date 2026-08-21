@@ -1,84 +1,85 @@
-// node scripts/setup.mjs - check what a fresh clone is missing, build the helper app.
 import { execFileSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
-import { ROOT, SWYH, HELPER_APP, hasHelper, findPython, PYTHON_HINT } from "./lib/config.mjs";
-import { findSwitcher, listOutputs } from "./lib/audio.mjs";
-import { color } from "./lib/term.mjs";
+import {
+  PROJECT_ROOT, AUDIO_SERVER_BIN, CAPTURE_HELPER_APP, hasCaptureHelper,
+  findPython, PYTHON_INSTALL_HINT,
+} from "./lib/config.mjs";
+import { findOutputSwitcher, listOutputs } from "./lib/audio/output.mjs";
+import { color } from "./lib/terminal/ansi.mjs";
 
-const ok = (msg) => console.log(`${color.green("ok")}    ${msg}`);
-const warn = (msg, hint) => console.log(`${color.yellow("warn")}  ${msg}\n      ${color.dim(hint)}`);
-const bad = (msg, hint) => console.log(`${color.red("x")}     ${msg}\n      ${color.dim(hint)}`);
+const reportOk = (message) => console.log(`${color.green("ok")}    ${message}`);
+const reportWarning = (message, hint) =>
+  console.log(`${color.yellow("warn")}  ${message}\n      ${color.dim(hint)}`);
+const reportProblem = (message, hint) =>
+  console.log(`${color.red("x")}     ${message}\n      ${color.dim(hint)}`);
 
-let blocking = 0;
+let blockingProblems = 0;
 
-console.log(`\n${color.bold("cast-audio setup")}\n`);
+console.log(`\n${color.bold("moss-cast setup")}\n`);
 
-// --- the audio server ---
-if (existsSync(SWYH)) {
-  ok("audio server (bin/swyh-rs-cli)");
+const hasAudioServer = existsSync(AUDIO_SERVER_BIN);
+if (hasAudioServer) {
+  reportOk("audio server (bin/swyh-rs-cli)");
 } else {
-  blocking++;
-  bad("audio server missing at bin/swyh-rs-cli", "See the last section of the README for how to rebuild it.");
+  blockingProblems++;
+  reportProblem("audio server missing at bin/swyh-rs-cli",
+    "See the last section of the README for how to rebuild it.");
 }
 
-// --- the .app bundle that can hold a microphone grant ---
-if (existsSync(SWYH)) {
+if (hasAudioServer) {
   try {
-    execFileSync(join(ROOT, "scripts", "build-helper.sh"), { stdio: "pipe" });
-    ok(`capture helper built (${HELPER_APP.replace(ROOT, ".")})`);
-  } catch (e) {
-    warn("could not build the capture helper", `Casting from the menu bar may stream silence. ${e.message}`);
+    execFileSync(join(PROJECT_ROOT, "scripts", "shell", "build-helper.sh"), { stdio: "pipe" });
+    reportOk(`capture helper built (${CAPTURE_HELPER_APP.replace(PROJECT_ROOT, ".")})`);
+  } catch (error) {
+    reportWarning("could not build the capture helper",
+      `Casting from the menu bar may stream silence. ${error.message}`);
   }
 }
 
-// --- pychromecast, via catt's tool environment ---
 const python = findPython();
 if (python) {
   try {
     execFileSync(python, ["-c", "import pychromecast"], { stdio: "pipe" });
-    ok("pychromecast");
+    reportOk("pychromecast");
   } catch {
-    blocking++;
-    bad("the Python found has no pychromecast", PYTHON_HINT);
+    blockingProblems++;
+    reportProblem("the Python found has no pychromecast", PYTHON_INSTALL_HINT);
   }
 } else {
-  blocking++;
-  bad("no Python with pychromecast found", PYTHON_HINT);
+  blockingProblems++;
+  reportProblem("no Python with pychromecast found", PYTHON_INSTALL_HINT);
 }
 
-// --- the loopback device that makes system audio capturable ---
-const switcher = findSwitcher();
+const switcher = findOutputSwitcher();
 if (switcher) {
   const outputs = listOutputs(switcher);
-  const multi = outputs.find((n) => /multi-output/i.test(n));
-  const blackhole = outputs.find((n) => /blackhole/i.test(n));
+  const multiOutput = outputs.find((name) => /multi-output/i.test(name));
+  const blackHole = outputs.find((name) => /blackhole/i.test(name));
 
-  ok("SwitchAudioSource");
-  if (blackhole) {
-    ok(`capture device: ${blackhole} (audio goes to the Chromecast only)`);
-  } else if (multi) {
-    ok(`capture device: ${multi} (this Mac stays audible while casting)`);
+  reportOk("SwitchAudioSource");
+  if (blackHole) {
+    reportOk(`capture device: ${blackHole} (audio goes to the Chromecast only)`);
+  } else if (multiOutput) {
+    reportOk(`capture device: ${multiOutput} (this Mac stays audible while casting)`);
   } else {
-    blocking++;
-    bad("no BlackHole or Multi-Output Device in your sound outputs",
+    blockingProblems++;
+    reportProblem("no BlackHole or Multi-Output Device in your sound outputs",
       "Install it with: brew install blackhole-2ch");
   }
 } else {
-  warn("SwitchAudioSource not installed",
+  reportWarning("SwitchAudioSource not installed",
     "Casting works, but you switch the sound output by hand. brew install switchaudio-osx");
 }
 
-// --- the menu bar plugin ---
-if (hasHelper() || existsSync(SWYH)) {
-  const swiftbar = existsSync("/Applications/SwiftBar.app");
-  if (swiftbar) ok("SwiftBar");
-  else warn("SwiftBar not installed", "Only needed for the menu bar. brew install --cask swiftbar");
+if (hasCaptureHelper() || hasAudioServer) {
+  if (existsSync("/Applications/SwiftBar.app")) reportOk("SwiftBar");
+  else reportWarning("SwiftBar not installed", "Only needed for the menu bar. brew install --cask swiftbar");
 }
 
 console.log("");
-if (blocking > 0) {
-  const noun = `${blocking} thing${blocking === 1 ? "" : "s"}`;
+if (blockingProblems > 0) {
+  const noun = `${blockingProblems} thing${blockingProblems === 1 ? "" : "s"}`;
   console.log(`${color.red(noun)} still to fix before casting will work.\n`);
   process.exit(1);
 }

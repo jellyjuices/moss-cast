@@ -7,9 +7,11 @@ export const PROJECT_ROOT = dirname(dirname(dirname(fileURLToPath(import.meta.ur
 
 export const STATE_DIR = join(PROJECT_ROOT, ".state");
 export const SESSION_FILE = join(STATE_DIR, "session.json");
+export const MUTE_FILE = join(STATE_DIR, "mute.json");
 export const SERVER_LOG_FILE = join(STATE_DIR, "server.log");
 export const DEVICE_CACHE_FILE = join(STATE_DIR, "devices.json");
 export const SERVER_CONFIG_FILE = join(STATE_DIR, "swyh-cast.toml");
+export const SCAN_MARKER_FILE = join(STATE_DIR, "scanning");
 export const CONTROL_PIPE = join(STATE_DIR, "control.fifo");
 
 export const STREAM_PORT = 5901;

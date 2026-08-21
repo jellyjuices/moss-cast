@@ -1,10 +1,13 @@
 import { findPython, PYTHON_INSTALL_HINT } from "./lib/config.mjs";
 import { currentNetworkId } from "./lib/network.mjs";
-import { readDeviceCache, writeDeviceCache, scanForDevices } from "./lib/chromecast/cache.mjs";
+import {
+  readDeviceCache, writeDeviceCache, scanForDevices, markScanStarted, markScanFinished,
+} from "./lib/chromecast/cache.mjs";
 
 const printJson = (payload) => process.stdout.write(`${JSON.stringify(payload, null, 2)}\n`);
 
 const exitWithError = (error) => {
+  markScanFinished(); // process.exit runs no finally block
   printJson({ ok: false, error });
   process.exit(1);
 };
@@ -21,10 +24,13 @@ if (cache) {
 const python = findPython();
 if (!python) exitWithError(`The Chromecast helper's Python is missing. ${PYTHON_INSTALL_HINT}`);
 
+markScanStarted();
 try {
   const devices = scanForDevices(python);
   if (devices.length > 0) writeDeviceCache(networkId, devices);
   printJson({ ok: true, cached: false, savedAt: new Date().toISOString(), devices });
 } catch (error) {
   exitWithError(`Could not scan for Chromecasts: ${error.message}`);
+} finally {
+  markScanFinished();
 }

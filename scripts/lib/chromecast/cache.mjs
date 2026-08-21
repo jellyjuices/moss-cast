@@ -1,6 +1,6 @@
 import { spawn, execFileSync } from "node:child_process";
-import { existsSync, readFileSync, writeFileSync, mkdirSync } from "node:fs";
-import { STATE_DIR, DEVICE_CACHE_FILE, SCANNER_SCRIPT } from "../config.mjs";
+import { existsSync, readFileSync, writeFileSync, mkdirSync, rmSync, statSync } from "node:fs";
+import { STATE_DIR, DEVICE_CACHE_FILE, SCANNER_SCRIPT, SCAN_MARKER_FILE } from "../config.mjs";
 
 export const CACHE_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
 
@@ -27,6 +27,25 @@ export function scanForDevices(python, scanSeconds = DEFAULT_SCAN_SECONDS) {
     timeout: (scanSeconds + SCAN_OVERHEAD_SECONDS) * 1000,
   }));
 }
+
+// A scan runs in its own process, so the menu bar reads this file to find out
+// one is in flight. The mtime guards against a marker left behind by a crash.
+const SCAN_STALE_MS = 60 * 1000;
+
+export function isScanning() {
+  try {
+    return Date.now() - statSync(SCAN_MARKER_FILE).mtimeMs < SCAN_STALE_MS;
+  } catch {
+    return false;
+  }
+}
+
+export function markScanStarted() {
+  mkdirSync(STATE_DIR, { recursive: true });
+  writeFileSync(SCAN_MARKER_FILE, "");
+}
+
+export const markScanFinished = () => rmSync(SCAN_MARKER_FILE, { force: true });
 
 export function readDeviceCache(networkId) {
   if (!existsSync(DEVICE_CACHE_FILE)) return null;

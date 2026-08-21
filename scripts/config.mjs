@@ -10,11 +10,24 @@ export const STATE_FILE = join(STATE_DIR, "session.json");
 export const LOG_FILE = join(STATE_DIR, "server.log");
 export const DEVICES_FILE = join(STATE_DIR, "devices.json");
 
+// The one control surface into a running supervisor: a named pipe it reads lines
+// from. The menu is a fresh process every redraw, so it cannot hold the Cast
+// connection itself - it writes "vol 0.40" here and the supervisor forwards it.
+export const CONTROL_FIFO = join(STATE_DIR, "control.fifo");
+
 // The swyh-rs audio server. The copy in ./bin is self-contained (it links only
 // against macOS system frameworks), so the Rust source repo can be deleted.
 const SWYH_LOCAL = join(ROOT, "bin", "swyh-rs-cli");
 const SWYH_REPO = join(homedir(), "Git", "swyh-rs", "target", "release", "swyh-rs-cli");
 export const SWYH = existsSync(SWYH_LOCAL) ? SWYH_LOCAL : SWYH_REPO;
+
+// The same binary wrapped in an .app bundle, built by scripts/build-helper.sh.
+// Capture needs microphone permission, and only a bundle with a usage string can
+// be granted it - a bare binary launched from SwiftBar is denied without a prompt
+// and captures silence. Launched through `open`, TCC attributes to this bundle.
+export const HELPER_APP = join(ROOT, "bin", "CastAudioHelper.app");
+export const HELPER_BIN = join(HELPER_APP, "Contents", "MacOS", "CastAudioHelper");
+export const hasHelper = () => existsSync(HELPER_BIN);
 
 // catt lives outside the default PATH when installed with `uv tool install`.
 const CATT_CANDIDATES = [

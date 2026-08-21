@@ -7,7 +7,11 @@
   "scripts": {
     "cast": "node scripts/start.mjs",
     "cast:stop": "node scripts/stop.mjs",
-    "cast:rescan": "node scripts/start.mjs --rescan"
+    "cast:rescan": "node scripts/start.mjs --rescan",
+    "cast:list": "node scripts/list.mjs",
+    "cast:status": "node scripts/status.mjs",
+    "cast:to": "node scripts/cast.mjs",
+    "cast:volume": "node scripts/volume.mjs"
   },
   "engines": {
     "node": ">=18"

@@ -1,0 +1,12 @@
+{
+  "supervisorPid": 15217,
+  "pid": 15227,
+  "device": "Bedroom speaker",
+  "ip": "192.168.0.17",
+  "url": "http://192.168.0.91:5901/stream/swyh.wav",
+  "output": "BlackHole 2ch",
+  "restoreOutput": "MacBook Air Speakers",
+  "ready": true,
+  "volume": 0.5,
+  "startedAt": "2026-08-21T01:35:24.901Z"
+}

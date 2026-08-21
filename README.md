@@ -5,7 +5,7 @@ Sends this Mac's system audio to a Chromecast.
 ## Use it
 
 ```sh
-cd ~/Desktop/cast-audio
+cd ~/Git/cast-audio
 npm run cast:start
 ```
 
@@ -18,6 +18,49 @@ npm run cast:stop
 
 Stops the Chromecast, shuts the audio server down, and puts the sound output back.
 You only need this if the casting window is gone; pressing `q` does the same.
+
+## From the menu bar
+
+A [SwiftBar](https://swiftbar.app) plugin gives you the same thing without a
+terminal: click the icon, pick a speaker, click **Stop casting** when you are done.
+While it is casting the dropdown carries the speaker's volume in place of the
+sound output line: a bar showing the current level, **Mute**, and a **Set volume**
+submenu to jump straight to a level.
+
+```sh
+brew install --cask swiftbar
+```
+
+Point SwiftBar's plugin folder at `swiftbar/` inside this repo (SwiftBar asks on
+first launch, or Preferences -> Plugin Folder). The plugin lists the speakers from
+the same cache the CLI uses, so the menu opens instantly.
+
+To use your own menu bar icon, drop a maskable PNG at `swiftbar/Normal.png`,
+and optionally a second one at `swiftbar/Casting.png` for while it is casting.
+They are drawn as template images, so macOS handles light and dark mode - use a
+solid black shape on transparency. SwiftBar draws a PNG at its own pixel size, so
+the plugin pins the icon to 18pt with the width/height params; that means you can
+hand it a dense file (400x400) and get a crisp Retina icon rather than a huge one.
+Without them the plugin falls back to SF Symbols.
+
+### The same thing from a script
+
+```sh
+npm run cast:list           # known speakers, as JSON
+npm run cast:to -- --device "Kitchen speaker"
+npm run cast:status         # what is casting right now, as JSON
+npm run cast:stop
+npm run cast:volume -- up    # or: down, mute, or a number 0-100
+```
+
+`cast:volume` is the same control the menu uses. It writes to `.state/control.fifo`,
+a named pipe the running `cast:to` reads: the Cast connection lives in that process,
+so a one-shot command cannot set the volume itself, but it can ask.
+
+`cast:to` is the headless twin of `npm run cast`: no picker, no keyboard controls.
+It stays in the foreground holding the connection open, so background it (that is
+what `scripts/cast-launch.sh` does) and stop it with `cast:stop`, which signals it
+to put your sound output back. Anything it has to say goes to `.state/cast.log`.
 
 ### Speaker list caching
 
@@ -84,8 +127,10 @@ No npm packages — the scripts only use what ships with Node.
 - `scripts/scan.py` — mDNS discovery, as JSON
 - `scripts/audio.mjs` — sound output switching
 - `scripts/picker.mjs` — the arrow-key menu
+- `scripts/menu.mjs` — the SwiftBar dropdown
+- `scripts/volume.mjs` — volume changes, sent to a running session
 - `scripts/config.mjs` — paths shared by both
-- `.state/` — the running session's PID and the server log (`server.log` is the
+- `.state/` — the running session's PID, its control pipe, and the server log (`server.log` is the
   first place to look when something misbehaves)
 
 - `bin/swyh-rs-cli` — the audio server itself
@@ -111,5 +156,5 @@ brew install cmake ninja          # libFLAC and FLTK compile from C source
 git clone https://github.com/dheijl/swyh-rs && cd swyh-rs
 git apply /path/to/swyh-rs-macos-fixes.patch
 cargo build --release --no-default-features --features cli
-cp target/release/swyh-rs-cli ~/Desktop/cast-audio/bin/
+cp target/release/swyh-rs-cli ~/Git/cast-audio/bin/
 ```

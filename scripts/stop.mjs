@@ -25,6 +25,23 @@ if (!existsSync(STATE_FILE)) {
 
 const session = JSON.parse(readFileSync(STATE_FILE, "utf8"));
 
+// A headless supervisor (scripts/cast.mjs) already knows how to take everything
+// down cleanly, sound output included. Signal it and let it do its own shutdown
+// rather than tearing the pieces off underneath it.
+if (session.supervisorPid && alive(session.supervisorPid)) {
+  try { process.kill(session.supervisorPid, "SIGTERM"); } catch {}
+  for (let i = 0; i < 40 && existsSync(STATE_FILE); i++) await sleep(100);
+  if (!existsSync(STATE_FILE)) {
+    console.log(`${color.green("Stopped")} casting to ${color.bold(session.device ?? "the speaker")}`);
+    if (session.restoreOutput) {
+      console.log(`${color.green("Sound output")} back to ${color.bold(session.restoreOutput)}`);
+    }
+    process.exit(0);
+  }
+  // It did not go quietly; fall through and take it apart by hand.
+  try { process.kill(session.supervisorPid, "SIGKILL"); } catch {}
+}
+
 if (catt && session.device) {
   try {
     execFileSync(catt, ["-d", session.device, "stop"], { stdio: "pipe", timeout: 30_000 });

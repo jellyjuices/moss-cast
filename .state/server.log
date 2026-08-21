@@ -1,34 +1,26 @@
 Args { dry_run: None, config_id: None, server_port: None, auto_resume: None, sound_source_index: None, sound_source_name: Some("BlackHole"), log_level: None, ssdp_interval_mins: None, use_wave_format: Some(true), bits_per_sample: None, streaming_format: Some(Wav), stream_size: None, player_ip: None, ip_address: None, active_players: None, inject_silence: None, serve_only: Some(true), volume: None, upfront_buffer: None, language: None, sample_rate: None, use_dither: None }
 
-ARG override configfile (-C): Some(".state/swyh-cast.toml")
-Loading config from .state/swyh-cast.toml
+ARG override configfile (-C): Some("/Users/jjbastida/Git/cast-audio/.state/swyh-cast.toml")
+Loading config from /Users/jjbastida/Git/cast-audio/.state/swyh-cast.toml
 Loaded configuration -c _cli
-Thu, 20 Aug 2026 20:25:29 -0400 [INFO] SWYH-RS-CLI V 1.21.0(build: beta) - Running on aarch64, unix, macos - Logging started.
-Thu, 20 Aug 2026 20:25:29 -0400 [INFO] Commandline args: Args { dry_run: None, config_id: None, server_port: None, auto_resume: None, sound_source_index: None, sound_source_name: Some("BlackHole"), log_level: None, ssdp_interval_mins: None, use_wave_format: Some(true), bits_per_sample: None, streaming_format: Some(Wav), stream_size: None, player_ip: None, ip_address: None, active_players: None, inject_silence: None, serve_only: Some(true), volume: None, upfront_buffer: None, language: None, sample_rate: None, use_dither: None }
-Thu, 20 Aug 2026 20:25:29 -0400 [INFO] Current config: Configuration { server_port: Some(5901), auto_resume: false, sound_source: Some("BlackHole 2ch-"), sound_source_index: Some(0), log_level: Info, ssdp_interval_mins: 10.0, auto_reconnect: false, _disable_chunked: false, lpcm_stream_size: Some(U64maxNotChunked), wav_stream_size: Some(U32maxNotChunked), rf64_stream_size: Some(U64maxNotChunked), flac_stream_size: Some(NoneChunked), _use_wave_format: false, bits_per_sample: Some(16), streaming_format: Some(Wav), monitor_rms: false, capture_timeout: Some(2000), inject_silence: Some(false), buffering_delay_msec: Some(0), last_renderer: None, active_renderers: [], hidden_renderers: [], last_network: Some("192.168.0.91"), config_dir: "/Users/jjbastida/.swyh-rs", config_path: ".state/swyh-cast.toml", config_id: Some("_cli"), read_only: false, color_theme: Some(8), widget_scheme: Some(1), language: Some("en-US"), sample_rate: None, use_dither: Some(true) }
-Thu, 20 Aug 2026 20:25:29 -0400 [INFO] tb_log: Found Audio Source: index = 0, name = BlackHole 2ch-
-Thu, 20 Aug 2026 20:25:29 -0400 [INFO] tb_log: Selected audio source: BlackHole 2ch-[#0]
-Thu, 20 Aug 2026 20:25:29 -0400 [INFO] tb_log: Found Audio Source: index = 1, name = MacBook Air Microphone-
-Thu, 20 Aug 2026 20:25:29 -0400 [INFO] tb_log: Found Audio Source: index = 2, name = MacBook Air Speakers-
-Thu, 20 Aug 2026 20:25:29 -0400 [INFO] tb_log: Found Audio Source: index = 3, name = LoomAudioDevice-
-Thu, 20 Aug 2026 20:25:29 -0400 [INFO] tb_log: Found network: 127.0.0.1
-Thu, 20 Aug 2026 20:25:29 -0400 [INFO] tb_log: Found network: 192.168.0.91
-Thu, 20 Aug 2026 20:25:29 -0400 [INFO] Using network 192.168.0.91
-Thu, 20 Aug 2026 20:25:29 -0400 [INFO] tb_log: Capturing audio from: BlackHole 2ch-
-Thu, 20 Aug 2026 20:25:29 -0400 [INFO] tb_log: Default audio SupportedStreamConfig { channels: 2, sample_rate: 48000, buffer_size: Range { min: 15, max: 4096 }, sample_format: F32 }
-Thu, 20 Aug 2026 20:25:29 -0400 [INFO] tb_log: Audio capture sample format = F32
-Thu, 20 Aug 2026 20:25:29 -0400 [INFO] tb_log: The streaming server is listening on http://192.168.0.91:5901/stream/swyh.wav
-Thu, 20 Aug 2026 20:25:29 -0400 [INFO] tb_log: Default streaming sample rate: 48000, bits per sample: 16, format: wav
-Thu, 20 Aug 2026 20:25:29 -0400 [INFO] New config: Configuration { server_port: Some(5901), auto_resume: false, sound_source: Some("BlackHole 2ch-"), sound_source_index: Some(0), log_level: Info, ssdp_interval_mins: 10.0, auto_reconnect: false, _disable_chunked: false, lpcm_stream_size: Some(U64maxNotChunked), wav_stream_size: Some(U32maxNotChunked), rf64_stream_size: Some(U64maxNotChunked), flac_stream_size: Some(NoneChunked), _use_wave_format: false, bits_per_sample: Some(16), streaming_format: Some(Wav), monitor_rms: false, capture_timeout: Some(2000), inject_silence: Some(false), buffering_delay_msec: Some(0), last_renderer: None, active_renderers: [], hidden_renderers: [], last_network: Some("192.168.0.91"), config_dir: "/Users/jjbastida/.swyh-rs", config_path: ".state/swyh-cast.toml", config_id: Some("_cli"), read_only: false, color_theme: Some(8), widget_scheme: Some(1), language: Some("en-US"), sample_rate: None, use_dither: Some(true) }
-Thu, 20 Aug 2026 20:25:29 -0400 [INFO] tb_log: Serving started on port 5901...
-Thu, 20 Aug 2026 20:25:29 -0400 [INFO] tb_log: Audio capture is now receiving samples.
-Thu, 20 Aug 2026 20:25:37 -0400 [INFO] tb_log: Streaming request /stream/swyh.wav from 192.168.0.144:36544
-Thu, 20 Aug 2026 20:25:37 -0400 [INFO] tb_log: Streaming audio/wave;codec=1 (WAV), input sample format F32, channels=2, rate=48000, bps = 16, to 192.168.0.144:36544
-Thu, 20 Aug 2026 20:25:54 -0400 [INFO] tb_log: Streaming to 192.168.0.144:36544 has ended
-Thu, 20 Aug 2026 20:25:54 -0400 [INFO] tb_log: Streaming request /stream/swyh.wav from 192.168.0.144:37082
-Thu, 20 Aug 2026 20:25:54 -0400 [INFO] tb_log: Streaming audio/wave;codec=1 (WAV), input sample format F32, channels=2, rate=48000, bps = 16, to 192.168.0.144:37082
-Thu, 20 Aug 2026 20:25:56 -0400 [INFO] tb_log: Streaming request /stream/swyh.wav from 192.168.0.144:37092
-Thu, 20 Aug 2026 20:25:56 -0400 [INFO] tb_log: Streaming audio/wave;codec=1 (WAV), input sample format F32, channels=2, rate=48000, bps = 16, to 192.168.0.144:37092
-Thu, 20 Aug 2026 20:25:56 -0400 [INFO] tb_log: Streaming to 192.168.0.144:37082 has ended
-Thu, 20 Aug 2026 20:26:00 -0400 [INFO] tb_log: Streaming to 192.168.0.144:37092 has ended
-Received ^C -> exiting.
+Thu, 20 Aug 2026 21:26:18 -0400 [INFO] SWYH-RS-CLI V 1.21.0(build: beta) - Running on aarch64, unix, macos - Logging started.
+Thu, 20 Aug 2026 21:26:18 -0400 [INFO] Commandline args: Args { dry_run: None, config_id: None, server_port: None, auto_resume: None, sound_source_index: None, sound_source_name: Some("BlackHole"), log_level: None, ssdp_interval_mins: None, use_wave_format: Some(true), bits_per_sample: None, streaming_format: Some(Wav), stream_size: None, player_ip: None, ip_address: None, active_players: None, inject_silence: None, serve_only: Some(true), volume: None, upfront_buffer: None, language: None, sample_rate: None, use_dither: None }
+Thu, 20 Aug 2026 21:26:18 -0400 [INFO] Current config: Configuration { server_port: Some(5901), auto_resume: false, sound_source: Some("BlackHole 2ch-"), sound_source_index: Some(0), log_level: Info, ssdp_interval_mins: 10.0, auto_reconnect: false, _disable_chunked: false, lpcm_stream_size: Some(U64maxNotChunked), wav_stream_size: Some(U32maxNotChunked), rf64_stream_size: Some(U64maxNotChunked), flac_stream_size: Some(NoneChunked), _use_wave_format: false, bits_per_sample: Some(16), streaming_format: Some(Wav), monitor_rms: false, capture_timeout: Some(2000), inject_silence: Some(false), buffering_delay_msec: Some(0), last_renderer: None, active_renderers: [], hidden_renderers: [], last_network: Some("192.168.0.91"), config_dir: "/Users/jjbastida/.swyh-rs", config_path: "/Users/jjbastida/Git/cast-audio/.state/swyh-cast.toml", config_id: Some("_cli"), read_only: false, color_theme: Some(8), widget_scheme: Some(1), language: Some("en-US"), sample_rate: None, use_dither: Some(true) }
+Thu, 20 Aug 2026 21:26:18 -0400 [INFO] tb_log: Found Audio Source: index = 0, name = BlackHole 2ch-
+Thu, 20 Aug 2026 21:26:18 -0400 [INFO] tb_log: Selected audio source: BlackHole 2ch-[#0]
+Thu, 20 Aug 2026 21:26:18 -0400 [INFO] tb_log: Found Audio Source: index = 1, name = MacBook Air Microphone-
+Thu, 20 Aug 2026 21:26:18 -0400 [INFO] tb_log: Found Audio Source: index = 2, name = MacBook Air Speakers-
+Thu, 20 Aug 2026 21:26:18 -0400 [INFO] tb_log: Found Audio Source: index = 3, name = LoomAudioDevice-
+Thu, 20 Aug 2026 21:26:18 -0400 [INFO] tb_log: Found network: 127.0.0.1
+Thu, 20 Aug 2026 21:26:18 -0400 [INFO] tb_log: Found network: 192.168.0.91
+Thu, 20 Aug 2026 21:26:18 -0400 [INFO] Using network 192.168.0.91
+Thu, 20 Aug 2026 21:26:18 -0400 [INFO] tb_log: Capturing audio from: BlackHole 2ch-
+Thu, 20 Aug 2026 21:26:18 -0400 [INFO] tb_log: Default audio SupportedStreamConfig { channels: 2, sample_rate: 48000, buffer_size: Range { min: 15, max: 4096 }, sample_format: F32 }
+Thu, 20 Aug 2026 21:26:18 -0400 [INFO] tb_log: Audio capture sample format = F32
+Thu, 20 Aug 2026 21:26:18 -0400 [INFO] tb_log: The streaming server is listening on http://192.168.0.91:5901/stream/swyh.wav
+Thu, 20 Aug 2026 21:26:18 -0400 [INFO] tb_log: Default streaming sample rate: 48000, bits per sample: 16, format: wav
+Thu, 20 Aug 2026 21:26:18 -0400 [INFO] New config: Configuration { server_port: Some(5901), auto_resume: false, sound_source: Some("BlackHole 2ch-"), sound_source_index: Some(0), log_level: Info, ssdp_interval_mins: 10.0, auto_reconnect: false, _disable_chunked: false, lpcm_stream_size: Some(U64maxNotChunked), wav_stream_size: Some(U32maxNotChunked), rf64_stream_size: Some(U64maxNotChunked), flac_stream_size: Some(NoneChunked), _use_wave_format: false, bits_per_sample: Some(16), streaming_format: Some(Wav), monitor_rms: false, capture_timeout: Some(2000), inject_silence: Some(false), buffering_delay_msec: Some(0), last_renderer: None, active_renderers: [], hidden_renderers: [], last_network: Some("192.168.0.91"), config_dir: "/Users/jjbastida/.swyh-rs", config_path: "/Users/jjbastida/Git/cast-audio/.state/swyh-cast.toml", config_id: Some("_cli"), read_only: false, color_theme: Some(8), widget_scheme: Some(1), language: Some("en-US"), sample_rate: None, use_dither: Some(true) }
+Thu, 20 Aug 2026 21:26:18 -0400 [INFO] tb_log: Serving started on port 5901...
+Thu, 20 Aug 2026 21:26:18 -0400 [INFO] tb_log: Audio capture is now receiving samples.
+Thu, 20 Aug 2026 21:26:19 -0400 [INFO] tb_log: Streaming request /stream/swyh.wav from 192.168.0.17:32793
+Thu, 20 Aug 2026 21:26:19 -0400 [INFO] tb_log: Streaming audio/wave;codec=1 (WAV), input sample format F32, channels=2, rate=48000, bps = 16, to 192.168.0.17:32793

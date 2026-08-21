@@ -1,81 +1,53 @@
-// npm run cast:stop
-//
-// Stops the Chromecast playback and shuts the audio server down.
-import { execFileSync } from "node:child_process";
-import { existsSync, readFileSync, rmSync } from "node:fs";
+// npm run cast:stop - stops whatever is casting, however it was started.
 import { setTimeout as sleep } from "node:timers/promises";
-import { STATE_FILE, findCatt, color } from "./config.mjs";
-import { findSwitcher, setOutput } from "./audio.mjs";
+import { rmSync } from "node:fs";
+import { CONTROL_FIFO } from "./lib/config.mjs";
+import { findSwitcher, setOutput } from "./lib/audio.mjs";
+import { color } from "./lib/term.mjs";
+import * as session from "./lib/session.mjs";
 
-const catt = findCatt();
+const state = session.read();
 
-function alive(pid) {
-  try {
-    process.kill(pid, 0);
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-if (!existsSync(STATE_FILE)) {
-  console.log(color.yellow("Nothing is casting (no active session found)."));
+if (!state) {
+  console.log(color.yellow("Nothing is casting."));
   process.exit(0);
 }
 
-const session = JSON.parse(readFileSync(STATE_FILE, "utf8"));
+// Both front ends run the same engine, so the session owner already knows how to
+// take everything down cleanly - sound output included. Signal it rather than
+// tearing the pieces off underneath it.
+if (session.alive(state.supervisorPid)) {
+  try { process.kill(state.supervisorPid, "SIGTERM"); } catch {}
+  for (let i = 0; i < 40 && session.read(); i++) await sleep(100);
 
-// A headless supervisor (scripts/cast.mjs) already knows how to take everything
-// down cleanly, sound output included. Signal it and let it do its own shutdown
-// rather than tearing the pieces off underneath it.
-if (session.supervisorPid && alive(session.supervisorPid)) {
-  try { process.kill(session.supervisorPid, "SIGTERM"); } catch {}
-  for (let i = 0; i < 40 && existsSync(STATE_FILE); i++) await sleep(100);
-  if (!existsSync(STATE_FILE)) {
-    console.log(`${color.green("Stopped")} casting to ${color.bold(session.device ?? "the speaker")}`);
-    if (session.restoreOutput) {
-      console.log(`${color.green("Sound output")} back to ${color.bold(session.restoreOutput)}`);
+  if (!session.read()) {
+    console.log(`${color.green("Stopped")} casting to ${color.bold(state.device ?? "the speaker")}`);
+    if (state.restoreOutput) {
+      console.log(`${color.green("Sound output")} back to ${color.bold(state.restoreOutput)}`);
     }
     process.exit(0);
   }
-  // It did not go quietly; fall through and take it apart by hand.
-  try { process.kill(session.supervisorPid, "SIGKILL"); } catch {}
+  try { process.kill(state.supervisorPid, "SIGKILL"); } catch {}
 }
 
-if (catt && session.device) {
-  try {
-    execFileSync(catt, ["-d", session.device, "stop"], { stdio: "pipe", timeout: 30_000 });
-    console.log(`${color.green("Stopped")} playback on ${color.bold(session.device)}`);
-  } catch {
-    console.log(color.yellow(`Could not reach ${session.device} - it may already be idle.`));
-  }
-}
-
-if (session.pid && alive(session.pid)) {
-  // swyh-rs does not always honour SIGTERM, so escalate if it is still there.
-  try { process.kill(session.pid, "SIGTERM"); } catch {}
-  await sleep(1500);
-  if (alive(session.pid)) {
-    try { process.kill(session.pid, "SIGKILL"); } catch {}
-  }
+// It did not go quietly, or it was already gone: clean up after it by hand.
+if (session.alive(state.pid)) {
+  try { process.kill(state.pid, "SIGKILL"); } catch {}
   console.log(`${color.green("Stopped")} the audio server`);
-} else {
-  console.log(color.dim("The audio server was already stopped."));
 }
 
-// Put the sound output back where the session found it.
 const switcher = findSwitcher();
-if (switcher && session.restoreOutput) {
+
+if (switcher && state.restoreOutput) {
   try {
-    setOutput(switcher, session.restoreOutput);
-    console.log(`${color.green("Sound output")} back to ${color.bold(session.restoreOutput)}`);
+    setOutput(switcher, state.restoreOutput);
+    console.log(`${color.green("Sound output")} back to ${color.bold(state.restoreOutput)}`);
   } catch {
-    console.log(color.yellow(`Could not switch the sound output back to ${session.restoreOutput}.`));
+    console.log(color.yellow(`Could not switch the sound output back to ${state.restoreOutput}.`));
   }
+} else {
+  console.log(color.dim("Remember to set your sound output back to your speakers."));
 }
 
-rmSync(STATE_FILE, { force: true });
-
-if (!switcher || !session.restoreOutput) {
-  console.log(color.dim("\nRemember to set your sound output back to your speakers.\n"));
-}
+rmSync(CONTROL_FIFO, { force: true });
+session.clear();

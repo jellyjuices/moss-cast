@@ -1,50 +1,23 @@
-// npm run cast:status
-//
-// Prints what is casting right now, as JSON. The session file is the source of
-// truth; a file whose supervisor has died is stale and reported as not casting.
-import { existsSync, readFileSync } from "node:fs";
-import { STATE_FILE } from "./config.mjs";
+// npm run cast:status - what is casting right now, as JSON.
+import * as session from "./lib/session.mjs";
 
-const out = (payload) => process.stdout.write(JSON.stringify(payload, null, 2) + "\n");
+const out = (payload) => process.stdout.write(`${JSON.stringify(payload, null, 2)}\n`);
+const state = session.read();
 
-function alive(pid) {
-  if (!pid) return false;
-  try {
-    process.kill(pid, 0);
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-if (!existsSync(STATE_FILE)) {
+if (!state) {
   out({ casting: false });
-  process.exit(0);
+} else if (state.error) {
+  out({ casting: false, error: state.error, failedAt: state.failedAt ?? null });
+} else {
+  const running = session.isRunning(state);
+  out({
+    casting: running,
+    stale: !running,
+    device: state.device ?? null,
+    ip: state.ip ?? null,
+    output: state.output ?? null,
+    volume: state.volume ?? null,
+    ready: state.ready ?? false,
+    startedAt: state.startedAt ?? null,
+  });
 }
-
-let session;
-try {
-  session = JSON.parse(readFileSync(STATE_FILE, "utf8"));
-} catch {
-  out({ casting: false, stale: true });
-  process.exit(0);
-}
-
-// A supervisor that failed leaves the reason behind instead of a live session.
-if (session.error) {
-  out({ casting: false, error: session.error, failedAt: session.failedAt ?? null });
-  process.exit(0);
-}
-
-// Either process still standing means something is running and worth stopping.
-const running = alive(session.supervisorPid) || alive(session.pid);
-
-out({
-  casting: running,
-  stale: !running,
-  device: session.device ?? null,
-  ip: session.ip ?? null,
-  output: session.output ?? null,
-  ready: session.ready ?? false,
-  startedAt: session.startedAt ?? null,
-});

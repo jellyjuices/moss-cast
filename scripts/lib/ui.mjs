@@ -1,8 +1,7 @@
 // The live status screen shown while casting. Redraws in place.
 import { stdout } from "node:process";
-import { color } from "./config.mjs";
+import { ESC, color, showCursor } from "./term.mjs";
 
-const ESC = "\u001b";
 const LINES = 9; // keep in sync with the number of lines render() writes
 
 function bar(level, width = 22) {
@@ -26,14 +25,6 @@ function stateLabel(state) {
     default:
       return color.dim(String(state || "connecting...").toLowerCase());
   }
-}
-
-export function hideCursor() {
-  stdout.write(`${ESC}[?25l`);
-}
-
-export function showCursor() {
-  stdout.write(`${ESC}[?25h`);
 }
 
 let drawnOnce = false;

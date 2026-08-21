@@ -1,0 +1,15 @@
+{
+  "name": "cast-audio",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Cast this Mac's system audio to a Chromecast, via swyh-rs + catt",
+  "type": "module",
+  "scripts": {
+    "cast": "node scripts/start.mjs",
+    "cast:stop": "node scripts/stop.mjs",
+    "cast:rescan": "node scripts/start.mjs --rescan"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

@@ -1,0 +1,277 @@
+diff --git a/README.md b/README.md
+index d125250..b69bd1f 100644
+--- a/README.md
++++ b/README.md
+@@ -122,6 +122,30 @@ You would only ever need the debug build in the unlikely case rust "panics", and
+ 
+ If you want to build swyh-rs yourself, you can find some information in the [wiki](https://github.com/dheijl/swyh-rs/wiki).
+ 
++#### macOS
++
++swyh-rs builds and runs on macOS (Apple Silicon and Intel), but there are two macOS specifics.
++
++**Build prerequisites.** The FLTK GUI is compiled from source by `fltk-sys`, which needs CMake and (because the `use-ninja` feature is enabled) Ninja:
++
++```sh
++brew install cmake ninja
++cargo build --release
++```
++
++The CLI binary needs neither: `cargo build --release --no-default-features --features cli`.
++
++**Capturing system audio.** CoreAudio has no loopback: unlike WASAPI on Windows or a PulseAudio/PipeWire monitor source on Linux, a macOS *output* device cannot be opened for capture. You need a virtual audio driver, for example [BlackHole](https://existential.audio/blackhole/) (free) or [Loopback](https://rogueamoeba.com/loopback/):
++
++1. Install the driver, e.g. `brew install blackhole-2ch`.
++2. In *Audio MIDI Setup*, create a **Multi-Output Device** combining your speakers and BlackHole, so you keep hearing the audio while it is being captured.
++3. Select that Multi-Output Device as the macOS sound output.
++4. Start swyh-rs and pick **BlackHole 2ch** as the audio source (it is auto-selected on first run when a loopback driver is detected).
++
++The first capture triggers the macOS microphone permission prompt; grant it to the app (or to Terminal, when running the binary from a terminal) under *System Settings → Privacy & Security → Microphone*. If the permission is denied, capture yields silence.
++
++If you select a plain output device such as "MacBook Air Speakers", swyh-rs logs an error saying the device cannot be opened for capture — that is this limitation, not a bug.
++
+ If it doesn't work for you, please open a new issue and include all the debug log level information. I will try to provide a fix ASAP.
+ 
+ ### Todo
+@@ -132,6 +156,7 @@ If it doesn't work for you, please open a new issue and include all the debug lo
+ 
+ - On a freshly installed Windows system you may get an error "**VCRUNTIME140.dll was not found**". Rust Windows binaries built with the MSVC toolchain need the Visual Studio 2015..2019 runtime. Because so much software relies on it, is almost always already present, but if not you can get the Visual C++ 2015..2019 runtime installer from [https://aka.ms/vs/16/release/vc_redist.x64.exe](https://aka.ms/vs/16/release/vc_redist.x64.exe). The current Windows installer will automatically do this if necessary.
+ - On linux you may have to enable **audio monitoring** with pavucontrol to make audio capture work
++- On macOS you need a virtual loopback driver (BlackHole, Loopback, ...) to capture system audio, and swyh-rs needs microphone permission — see the macOS section above
+ - make sure that your firewall or anti-virus do not block the default incoming HTTP port 5901 for streaming requests (or the port number you configured in the UI if not the default), and that outgoing UDP traffic is allowed for SSDP  
+ - resizing a window in fltk 1.4 is not ideal, but thanks to @MoAlyousef it is now usable in swyh-rs. But if you resize vertically to a very small window you risk losing the horizontal scrollbar in the textbox at the bottom.
+ - simultaneous streaming to multiple renderers is only limited by the number of renderer buttons that can be shown in the available space in the window.
+diff --git a/src/audio/audiodevices.rs b/src/audio/audiodevices.rs
+index b0da978..f281700 100644
+--- a/src/audio/audiodevices.rs
++++ b/src/audio/audiodevices.rs
+@@ -99,8 +99,14 @@ impl Device {
+             "Unknown/unnamed".into()
+         });
+ 
+-        // Only use the default config for output or input
+-        // Prefer output if a device supports both
++        // Only use the default config for output or input.
++        //
++        // Windows (WASAPI) and Linux (ALSA/PipeWire monitor sources) can be captured
++        // through the device's *output* side, so output is preferred there when a device
++        // supports both. macOS CoreAudio has no loopback: capture always goes through the
++        // input side of a virtual loopback driver (BlackHole, Loopback, ...), and those
++        // devices also expose an output side, so input must win.
++        #[cfg(not(target_os = "macos"))]
+         let (kind, stream_config) = if let Ok(conf) = device.default_output_config() {
+             debug!("    Default output stream config:\n      {conf:?}");
+             (DeviceKind::Output(device), conf)
+@@ -110,6 +116,16 @@ impl Device {
+             debug!("    Default input stream config:\n      {conf:?}");
+             (DeviceKind::Input(device), conf)
+         };
++        #[cfg(target_os = "macos")]
++        let (kind, stream_config) = if let Ok(conf) = device.default_input_config() {
++            debug!("    Default input stream config:\n      {conf:?}");
++            (DeviceKind::Input(device), conf)
++        } else {
++            // If there's no input AND no output then return the error.
++            let conf = device.default_output_config()?;
++            debug!("    Default output stream config:\n      {conf:?}");
++            (DeviceKind::Output(device), conf)
++        };
+         Ok(Self {
+             kind,
+             name,
+@@ -270,11 +286,77 @@ pub fn get_output_audio_devices() -> Vec<Device> {
+     result
+ }
+ 
+-/// Returns the system default output device, or `None` if unavailable.
++/// Substrings identifying virtual loopback drivers commonly used to capture system
++/// audio on macOS, where CoreAudio offers no native loopback.
++#[cfg(target_os = "macos")]
++const MACOS_LOOPBACK_HINTS: [&str; 5] = [
++    "blackhole",
++    "loopback",
++    "soundflower",
++    "multi-output",
++    "aggregate",
++];
++
++/// Returns true if `name` looks like a macOS virtual loopback device.
++#[cfg(target_os = "macos")]
++fn is_macos_loopback(name: &str) -> bool {
++    let name = name.to_ascii_lowercase();
++    MACOS_LOOPBACK_HINTS.iter().any(|hint| name.contains(hint))
++}
++
++/// Returns true if the device can be opened for capture at all.
++fn supports_capture(device: &cpal::Device) -> bool {
++    device.default_input_config().is_ok()
++}
++
++/// Returns the default device to capture from, or `None` if unavailable.
++///
++/// On Windows and Linux this is the system default output device (captured through
++/// loopback / a monitor source). macOS has no loopback, so a virtual loopback driver is
++/// preferred, falling back to the default input device.
+ #[must_use]
+ pub fn get_default_audio_output_device() -> Option<Device> {
+     // audio hosts
+     let default_host = cpal::default_host();
++    #[cfg(target_os = "macos")]
++    {
++        // A virtual loopback driver is recognized either by a well-known name, or by
++        // exposing both an input and an output side (real microphones are input-only,
++        // real speakers are output-only).
++        let candidates: Vec<(bool, String, cpal::Device)> = default_host
++            .devices()
++            .into_iter()
++            .flatten()
++            .filter(supports_capture)
++            .map(|device| {
++                let name = get_device_name(&device).unwrap_or_default();
++                let known = is_macos_loopback(&name);
++                (known, name, device)
++            })
++            .filter(|(known, _, device)| *known || device.default_output_config().is_ok())
++            .collect();
++        // prefer a device matched by name over one matched by shape
++        if let Some((_, name, device)) = candidates
++            .into_iter()
++            .max_by_key(|(known, _, _)| u8::from(*known))
++        {
++            ui_log(
++                LogCategory::Info,
++                &format!("macOS: capturing from loopback device \"{name}\""),
++            );
++            return DeviceKind::Input(device).try_into().ok();
++        }
++        // 2. otherwise the default input device (a microphone, unless the user routed
++        //    system audio into a virtual device and made it the default input)
++        if let Some(device) = default_host.default_input_device() {
++            ui_log(
++                LogCategory::Warning,
++                "macOS: no virtual loopback device found (install BlackHole or Loopback \
++                 to stream system audio); falling back to the default input device",
++            );
++            return DeviceKind::Input(device).try_into().ok();
++        }
++    }
+     default_host
+         .default_output_device()
+         .and_then(|device| DeviceKind::Output(device).try_into().ok())
+@@ -288,6 +370,19 @@ pub fn capture_output_audio(
+     rms_sender: Sender<AudioSamples>,
+ ) -> Option<cpal::Stream> {
+     let device = device_wrap.as_ref();
++    if !supports_capture(device) {
++        // On macOS an output-only device cannot be captured: CoreAudio has no loopback.
++        ui_log(
++            LogCategory::Error,
++            &format!(
++                "Audio device \"{}\" cannot be opened for capture. \
++                 On macOS, system audio must be routed through a virtual loopback device \
++                 such as BlackHole or Loopback, and that device selected as the audio source.",
++                device_wrap.name()
++            ),
++        );
++        return None;
++    }
+     ui_log(
+         LogCategory::Info,
+         &fl!(
+diff --git a/src/bin/swyh-rs-cli.rs b/src/bin/swyh-rs-cli.rs
+index 40fa028..34a2cb4 100644
+--- a/src/bin/swyh-rs-cli.rs
++++ b/src/bin/swyh-rs-cli.rs
+@@ -463,6 +463,36 @@ fn select_audio_source_cli(
+     let audio_devices = get_output_audio_devices();
+     let mut audio_output_device_opt = default_device;
+ 
++    // Fresh config (no persisted source name) and nothing requested on the command line:
++    // use the system default capture device rather than enumeration index 0, which is an
++    // arbitrary device (on macOS it is typically the built-in microphone).
++    if config.sound_source.is_none()
++        && args.sound_source_name.is_none()
++        && args.sound_source_index.is_none()
++        && let Some(ref default_dev) = audio_output_device_opt
++    {
++        let devname = default_dev.name().to_owned();
++        if let Some(index) = audio_devices.iter().position(|d| d.name() == devname) {
++            config.sound_source = Some(devname.clone());
++            config.sound_source_index = Some(index as i32);
++            for (i, adev) in audio_devices.iter().enumerate() {
++                ui_log(
++                    LogCategory::Info,
++                    &fl!("cli-found-audio-source", "index" = i, "name" = adev.name()),
++                );
++            }
++            ui_log(
++                LogCategory::Info,
++                &fl!(
++                    "cli-selected-audio-source-idx",
++                    "name" = &devname,
++                    "index" = index
++                ),
++            );
++            return audio_output_device_opt;
++        }
++    }
++
+     // get the index from args or config; an index explicitly given on the
+     // command line is authoritative and must not be second-guessed by a name
+     // match against the (possibly stale) persisted config below
+diff --git a/src/bin/swyh-rs.rs b/src/bin/swyh-rs.rs
+index bb10a78..bbbbae4 100644
+--- a/src/bin/swyh-rs.rs
++++ b/src/bin/swyh-rs.rs
+@@ -42,9 +42,9 @@ use cpal::{SampleFormat, SupportedStreamConfig, traits::StreamTrait};
+ use crossbeam_channel::{Receiver, Sender, unbounded};
+ use fltk::{app, misc::Progress, prelude::ButtonExt};
+ use log::{LevelFilter, debug, info};
+-#[cfg(any(debug_assertions, target_os = "linux"))]
++#[cfg(any(debug_assertions, unix))]
+ use simplelog::{ColorChoice, CombinedLogger, ConfigBuilder, TermLogger, WriteLogger};
+-#[cfg(not(any(debug_assertions, target_os = "linux")))]
++#[cfg(not(any(debug_assertions, unix)))]
+ use simplelog::{CombinedLogger, ConfigBuilder, WriteLogger};
+ use std::{
+     cell::Cell,
+@@ -321,7 +321,7 @@ fn setup_logging(config: &Configuration) {
+     let _ = log_config_builder.set_time_offset_to_local(); // silently fall back to UTC on error
+     let log_config = log_config_builder.build();
+     // disable TermLogger on subsystem Windows because it panics with Rust edition 2021
+-    #[cfg(any(debug_assertions, target_os = "linux"))]
++    #[cfg(any(debug_assertions, unix))]
+     let _ = CombinedLogger::init(vec![
+         TermLogger::new(
+             loglevel,
+@@ -338,7 +338,7 @@ fn setup_logging(config: &Configuration) {
+             }),
+         ),
+     ]);
+-    #[cfg(not(any(debug_assertions, target_os = "linux")))]
++    #[cfg(not(any(debug_assertions, unix)))]
+     let _ = CombinedLogger::init(vec![WriteLogger::new(
+         loglevel,
+         log_config.clone(),
+diff --git a/src/utils/priority.rs b/src/utils/priority.rs
+index 2941dc0..ffe6fe0 100644
+--- a/src/utils/priority.rs
++++ b/src/utils/priority.rs
+@@ -3,6 +3,7 @@
+ //! [`raise_priority`] bumps the process scheduling priority on Windows (ABOVE_NORMAL)
+ //! and Linux (nice -10) to reduce audio capture stuttering under CPU load.
+ 
++#[cfg(any(target_os = "windows", target_os = "linux"))]
+ use crate::{
+     fl,
+     utils::ui_logger::{LogCategory, ui_log},
+@@ -39,5 +40,9 @@ pub fn raise_priority() {
+     }
+ }
+ 
++/// macOS: no-op.
++///
++/// CoreAudio already runs the capture callback on a real-time thread of its own, so
++/// bumping the process priority buys nothing, and `setpriority` below 0 requires root.
+ #[cfg(target_os = "macos")]
+ pub fn raise_priority() {}

@@ -1,0 +1,27 @@
+{
+  "network": "192.168.0",
+  "savedAt": "2026-08-20T17:33:23.392Z",
+  "devices": [
+    {
+      "name": "Bedroom speaker",
+      "ip": "192.168.0.17",
+      "port": 8009,
+      "uuid": "b0e925a2-c17f-0f1c-b0aa-91a0dbbfc0a8",
+      "model": "Google Home Mini"
+    },
+    {
+      "name": "Living Room TV",
+      "ip": "192.168.0.206",
+      "port": 8009,
+      "uuid": "91e61ba9-c9cd-3827-a7b1-f27547730cc7",
+      "model": "Chromecast"
+    },
+    {
+      "name": "Office TV",
+      "ip": "192.168.0.144",
+      "port": 8009,
+      "uuid": "05b7a3ec-ebe5-3cc9-5d45-c6cf998207ee",
+      "model": "Chromecast"
+    }
+  ]
+}

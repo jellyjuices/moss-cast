@@ -1,8 +1,8 @@
-// npm run cast:to -- --device "Kitchen speaker"
+// node scripts/cast.mjs --device "Kitchen speaker"
 //
 // The headless twin of start.mjs, and what the menu bar starts. It has to stay in
 // the foreground: the Cast connection dies with the process, so cast-launch.sh
-// backgrounds it and cast:stop signals it. Output goes to .state/cast.log.
+// backgrounds it and stop.mjs signals it. Output goes to .state/cast.log.
 import { mkdirSync, writeFileSync } from "node:fs";
 import { STATE_DIR, STATE_FILE } from "./lib/config.mjs";
 import { preflight } from "./lib/preflight.mjs";

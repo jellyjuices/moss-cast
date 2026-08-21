@@ -17,7 +17,7 @@ export function preflight(onError = fail) {
   if (!python) onError("The Chromecast helper's Python is missing.", PYTHON_HINT);
 
   if (!existsSync(SWYH)) {
-    onError(`The audio server is missing at ${SWYH}`, "Run: npm run setup");
+    onError(`The audio server is missing at ${SWYH}`, "Run: node scripts/setup.mjs");
   }
 
   const ip = localIPv4();

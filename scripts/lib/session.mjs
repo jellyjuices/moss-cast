@@ -1,8 +1,8 @@
 // The session file: the one thing every entry point agrees on.
 //
-// `npm run cast` (a terminal session) and `npm run cast:to` (the headless one the
-// menu bar starts) both write the same shape, so `cast:status`, `cast:stop`, the
-// volume control and the SwiftBar menu work the same whichever started the cast.
+// start.mjs (a terminal session) and cast.mjs (the headless one the menu bar
+// starts) both write the same shape, so status, stop, the volume control and the
+// SwiftBar menu work the same whichever started the cast.
 import { existsSync, readFileSync, writeFileSync, mkdirSync, rmSync } from "node:fs";
 import { STATE_DIR, STATE_FILE } from "./config.mjs";
 

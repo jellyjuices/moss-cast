@@ -1,4 +1,4 @@
-// npm run cast - pick a speaker, cast, and stay on screen with volume controls.
+// node scripts/start.mjs - pick a speaker, cast, and stay on screen with volume controls.
 import { stdin, stdout } from "node:process";
 import { color, KEY, hideCursor, showCursor } from "./lib/term.mjs";
 import { preflight, fail } from "./lib/preflight.mjs";
@@ -28,7 +28,7 @@ const device = await pick(
   "Where should the audio go?  (arrow keys, Enter to choose)",
   devices,
   (d) => `${d.name}  ${color.dim(`${d.model} - ${d.ip}`)}`,
-).catch((e) => fail(e.message, "Run `npm run cast` directly in Terminal, not through a pipe."));
+).catch((e) => fail(e.message, "Run `node scripts/start.mjs` directly in Terminal, not through a pipe."));
 
 let volume = 0.5;
 let state = "connecting";

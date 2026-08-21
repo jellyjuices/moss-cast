@@ -1,4 +1,4 @@
-// npm run cast:stop - stops whatever is casting, however it was started.
+// node scripts/stop.mjs - stops whatever is casting, however it was started.
 import { setTimeout as sleep } from "node:timers/promises";
 import { rmSync } from "node:fs";
 import { CONTROL_FIFO } from "./lib/config.mjs";

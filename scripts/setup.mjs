@@ -1,4 +1,4 @@
-// npm run setup - check what a fresh clone is missing, and build the helper app.
+// node scripts/setup.mjs - check what a fresh clone is missing, build the helper app.
 import { execFileSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
@@ -83,4 +83,4 @@ if (blocking > 0) {
   console.log(`${color.red(noun)} still to fix before casting will work.\n`);
   process.exit(1);
 }
-console.log(`${color.green("Ready.")} Run ${color.bold("npm run cast")}, or point SwiftBar's plugin folder at ${color.bold("swiftbar/")}.\n`);
+console.log(`${color.green("Ready.")} Run ${color.bold("node scripts/start.mjs")}, or point SwiftBar's plugin folder at ${color.bold("swiftbar/")}.\n`);

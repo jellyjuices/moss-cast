@@ -1,4 +1,4 @@
-// npm run cast:list [-- --rescan] - the known Chromecasts, as JSON.
+// node scripts/list.mjs [--rescan] - the known Chromecasts, as JSON.
 import { findPython, PYTHON_HINT } from "./lib/config.mjs";
 import { currentNetwork } from "./lib/net.mjs";
 import { readCache, writeCache, scan } from "./lib/devices.mjs";

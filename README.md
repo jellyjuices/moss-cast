@@ -1,7 +1,8 @@
 # cast-audio
 
-Sends this Mac's system audio to a Chromecast — from the terminal, or from the
-menu bar. No npm packages; the scripts use only what ships with Node.
+Send Mac OS system audio to a Chromecast — from the terminal, or from the
+menu bar. Nothing to install with npm and nothing to build: the scripts use only
+what ships with Node (18 or newer), and each command below is the script it runs.
 
 ## Setup
 
@@ -11,12 +12,12 @@ brew install --cask swiftbar          # optional, for the menu bar
 uv tool install catt                  # supplies pychromecast
 
 git clone <this repo> && cd cast-audio
-npm run setup
+node scripts/setup.mjs
 ```
 
-`npm run setup` checks each of those, builds the capture helper app, and tells
-you what is still missing. The audio server itself is committed as
-`bin/swyh-rs-cli`, so there is nothing to compile.
+`setup.mjs` checks each of those, builds the capture helper app, and tells you
+what is still missing. The audio server itself is committed as `bin/swyh-rs-cli`,
+so there is nothing to compile.
 
 Two things macOS needs from you by hand:
 
@@ -32,7 +33,7 @@ Two things macOS needs from you by hand:
 From the terminal:
 
 ```sh
-npm run cast
+node scripts/start.mjs
 ```
 
 Pick a speaker with the arrow keys and press Enter. The sound output switches
@@ -55,19 +56,19 @@ stopped from the menu bar, and the other way round.
 ## Scripting
 
 ```sh
-npm run cast:list                       # known speakers, as JSON
-npm run cast:status                     # what is casting right now, as JSON
-npm run cast:to -- --device "Kitchen"   # cast without the picker
-npm run cast:volume -- up               # or: down, mute, or a number 0-100
-npm run cast:stop
+node scripts/list.mjs                        # known speakers, as JSON
+node scripts/status.mjs                      # what is casting right now, as JSON
+node scripts/cast.mjs --device "Kitchen"     # cast without the picker
+node scripts/volume.mjs up                   # or: down, mute, or a number 0-100
+node scripts/stop.mjs
 ```
 
-`cast:to` is the headless twin of `npm run cast`: it stays in the foreground
+`cast.mjs` is the headless twin of `start.mjs`: it stays in the foreground
 holding the Cast connection open, so background it — that is what
 `scripts/cast-launch.sh`, and therefore the menu bar, does. Anything it has to
 say goes to `.state/cast.log`.
 
-`cast:volume` writes to `.state/control.fifo`, a named pipe the running session
+`volume.mjs` writes to `.state/control.fifo`, a named pipe the running session
 reads. The Cast connection lives in that one process, so a one-shot command
 cannot set the volume itself — it asks.
 
@@ -81,23 +82,23 @@ of 10. It is keyed by which network you are on and expires after a week. A
 speaker that moved falls back to discovery and is corrected on the next run.
 
 ```sh
-npm run cast:rescan     # force a fresh scan now
+node scripts/start.mjs --rescan     # force a fresh scan now
 ```
 
 ## When something is wrong
 
-Start with `npm run setup`, then `.state/server.log` and `.state/cast.log`.
+Start with `node scripts/setup.mjs`, then `.state/server.log` and `.state/cast.log`.
 
 **The Chromecast connects but plays nothing.** You hear the cast chime, then
 silence. If `server.log` says `Streaming to <ip> has ended` a second after it
 connected, the format is the problem: Chromecast will not hold an endless chunked
 stream with no declared duration. WAV is the default for exactly that reason.
 FLAC sounds better in theory and disconnects immediately on most Cast devices,
-but `CAST_FORMAT=flac npm run cast` will try it.
+but `CAST_FORMAT=flac node scripts/start.mjs` will try it.
 
 **Silence, or silence only from the menu bar.** Almost always microphone
 permission. A bare binary launched from SwiftBar is denied without a prompt and
-captures digital silence rather than failing — which is why `npm run setup`
+captures digital silence rather than failing — which is why `setup.mjs`
 builds `bin/CastAudioHelper.app`, an app bundle that can hold the grant. Check
 that Cast Audio Helper appears under Privacy & Security → Microphone.
 
@@ -111,11 +112,11 @@ tuned away. Fine for music, not usable for video.
 
 ```
 scripts/
-  start.mjs        pick a speaker and cast, with a live screen  (npm run cast)
-  cast.mjs         the same thing headless                      (npm run cast:to)
-  stop.mjs  status.mjs  list.mjs  volume.mjs                    the one-shot commands
+  start.mjs        pick a speaker and cast, with a live screen
+  cast.mjs         the same thing headless, for the menu bar
+  stop.mjs  status.mjs  list.mjs  volume.mjs   the one-shot commands
   menu.mjs         renders the SwiftBar dropdown
-  setup.mjs        the dependency check                         (npm run setup)
+  setup.mjs        the dependency check
   caster.py        holds one Chromecast connection open, driven over stdin
   scan.py          mDNS discovery, as JSON
   lib/engine.mjs   one casting session, start to teardown - both front ends run it
@@ -151,7 +152,7 @@ cargo build --release --no-default-features --features cli
 cp target/release/swyh-rs-cli /path/to/cast-audio/bin/
 ```
 
-Then `npm run setup` to rebuild the helper app around the new binary.
+Then `node scripts/setup.mjs` to rebuild the helper app around the new binary.
 
 ## Licence
 

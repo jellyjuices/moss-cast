@@ -10,7 +10,7 @@ binary and depends on several tools you install yourself.
 | [swyh-rs](https://github.com/dheijl/swyh-rs) by dheijl — the audio server, built from source with the macOS fixes in `swyh-rs-macos-fixes.patch` | `bin/swyh-rs-cli` | MIT — [full text](licenses/swyh-rs-LICENSE) |
 
 `bin/CastAudioHelper.app` is that same binary wrapped in an app bundle by
-`npm run setup`, and is covered by the same licence.
+`node scripts/setup.mjs`, and is covered by the same licence.
 
 ## Installed separately, not redistributed
 

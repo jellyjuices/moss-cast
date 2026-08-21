@@ -30,7 +30,7 @@ export const MIME = FORMAT === "flac" ? "audio/flac" : "audio/wav";
 // macOS system frameworks, so there is no Rust toolchain to install).
 export const SWYH = join(ROOT, "bin", "swyh-rs-cli");
 
-// The same binary wrapped in an .app bundle by `npm run setup`. Capture needs
+// The same binary wrapped in an .app bundle by `node scripts/setup.mjs`. Capture needs
 // microphone permission, and only a bundle carrying a usage string can be granted
 // it - a bare binary launched from SwiftBar is denied without a prompt and
 // captures silence. Launched through `open`, macOS attributes the grant here.

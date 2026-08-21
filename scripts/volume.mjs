@@ -1,4 +1,4 @@
-// npm run cast:volume -- up | down | mute | <0-100>
+// node scripts/volume.mjs up | down | mute | <0-100>
 //
 // The Cast connection belongs to the running session, so this writes one line
 // into its control pipe and lets it forward the change.
@@ -24,7 +24,7 @@ else if (arg === "down") next = current - STEP;
 else if (arg === "mute") next = 0;
 else if (/^\d+(\.\d+)?$/.test(arg)) next = Number(arg) / 100;
 else {
-  console.error("Use: cast:volume -- up | down | mute | <0-100>");
+  console.error("Use: node scripts/volume.mjs up | down | mute | <0-100>");
   process.exit(1);
 }
 

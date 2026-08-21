@@ -1,4 +1,4 @@
-// npm run cast:status - what is casting right now, as JSON.
+// node scripts/status.mjs - what is casting right now, as JSON.
 import * as session from "./lib/session.mjs";
 
 const out = (payload) => process.stdout.write(`${JSON.stringify(payload, null, 2)}\n`);

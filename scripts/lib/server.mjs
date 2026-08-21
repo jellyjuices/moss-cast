@@ -44,7 +44,7 @@ async function waitUntilServing(timeoutMs = 15_000) {
 // responsible app and can hold a microphone grant. Started as a bare binary it
 // inherits whatever launched it - fine from a terminal, silently denied under
 // SwiftBar, which then streams silence rather than failing. Falling back to the
-// raw binary keeps the CLI working before `npm run setup` has been run.
+// raw binary keeps the CLI working before `node scripts/setup.mjs` has been run.
 export async function startServer() {
   mkdirSync(join(homedir(), ".swyh-rs"), { recursive: true }); // swyh-rs quits without it
 

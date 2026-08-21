@@ -2,6 +2,6 @@
 .state/
 .code-review-graph/
 
-# Built by `npm run setup` from bin/swyh-rs-cli; the ad-hoc signature that carries
+# Built by `node scripts/setup.mjs` from bin/swyh-rs-cli; the ad-hoc signature that carries
 # the microphone grant is only valid on the machine that built it.
 bin/CastAudioHelper.app/

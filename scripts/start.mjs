@@ -1,5 +1,8 @@
-// node scripts/start.mjs - pick a speaker, cast, and stay on screen with volume controls.
+// node scripts/start.mjs [--rescan] [--keep-local]
+//
+// Pick a speaker, cast, and stay on screen with volume controls.
 import { stdin, stdout } from "node:process";
+import { KEEP_LOCAL } from "./lib/config.mjs";
 import { color, KEY, hideCursor, showCursor } from "./lib/term.mjs";
 import { preflight, fail } from "./lib/preflight.mjs";
 import { chooseDevice } from "./lib/discover.mjs";
@@ -44,6 +47,7 @@ let session;
 try {
   session = await startCasting({
     device,
+    keepLocal: KEEP_LOCAL || process.argv.includes("--keep-local"),
     onLog: (msg) => { if (!live) console.log(color.dim(msg)); },
     onEvent: (msg) => {
       if (msg.event === "error") note = msg.message;

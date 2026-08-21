@@ -55,11 +55,13 @@ if (switcher) {
   const blackhole = outputs.find((n) => /blackhole/i.test(n));
 
   ok("SwitchAudioSource");
-  if (multi) {
+  if (blackhole) {
+    ok(`capture device: ${blackhole} (audio goes to the Chromecast only)`);
+    if (multi) {
+      console.log(`      ${color.dim(`--keep-local uses ${multi} instead, to hear it here too`)}`);
+    }
+  } else if (multi) {
     ok(`capture device: ${multi} (this Mac stays audible while casting)`);
-  } else if (blackhole) {
-    warn(`capture device: ${blackhole}`,
-      "BlackHole alone silences this Mac. Create a Multi-Output Device in Audio MIDI Setup to hear both.");
   } else {
     blocking++;
     bad("no BlackHole or Multi-Output Device in your sound outputs",

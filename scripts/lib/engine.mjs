@@ -7,7 +7,7 @@ import { openSync, rmSync, constants } from "node:fs";
 import { Socket } from "node:net";
 import { createInterface } from "node:readline";
 import { setTimeout as sleep } from "node:timers/promises";
-import { CASTER, CONTROL_FIFO, MIME, findPython } from "./config.mjs";
+import { CASTER, CONTROL_FIFO, MIME, KEEP_LOCAL, findPython } from "./config.mjs";
 import { localIPv4 } from "./net.mjs";
 import { startServer, streamUrl } from "./server.mjs";
 import * as session from "./session.mjs";
@@ -21,16 +21,23 @@ const STOP_GRACE_MS = 1200;
 
 // Point the Mac's sound output at the capture device, remembering where to put it
 // back. Without SwitchAudioSource everything still works - you switch by hand.
-function claimOutput() {
+function claimOutput(keepLocal, onLog) {
   const bin = findSwitcher();
   if (!bin) return { output: null, restore: () => null };
 
-  const output = findCastDevice(bin);
+  const output = findCastDevice(bin, keepLocal);
   if (!output) {
     throw new Error(
       "No BlackHole or Multi-Output Device found in your sound outputs. " +
       `Sound outputs seen: ${listOutputs(bin).join(", ")}`,
     );
+  }
+
+  // Asking for local playback when there is no Multi-Output Device still casts,
+  // but say so - otherwise the flag looks like it worked.
+  if (keepLocal && !/multi-output/i.test(output)) {
+    onLog("No Multi-Output Device found - casting to the Chromecast only. " +
+      "Create one in Audio MIDI Setup to hear it here as well.");
   }
 
   const previous = findRestoreDevice(bin, currentOutput(bin));
@@ -97,7 +104,10 @@ function openControlPipe(onCommand, onLog) {
  * cleaned up by then. Throws - after undoing whatever it had done - if the
  * session cannot be established.
  */
-export async function startCasting({ device, onEvent = () => {}, onLost = () => {}, onLog = () => {} }) {
+export async function startCasting({
+  device, keepLocal = KEEP_LOCAL,
+  onEvent = () => {}, onLost = () => {}, onLog = () => {},
+}) {
   const python = findPython();
   const ip = localIPv4();
   const url = streamUrl(ip);
@@ -109,7 +119,7 @@ export async function startCasting({ device, onEvent = () => {}, onLost = () => 
 
   let sound;
   try {
-    sound = claimOutput();
+    sound = claimOutput(keepLocal, onLog);
     if (sound.output) onLog(`Sound output switched to ${sound.output}.`);
     else onLog("SwitchAudioSource is not installed - switch the sound output by hand.");
   } catch (e) {

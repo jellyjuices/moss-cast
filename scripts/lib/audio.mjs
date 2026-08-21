@@ -22,14 +22,19 @@ export const currentOutput = (bin) => run(bin, ["-c"]);
 
 export const setOutput = (bin, name) => run(bin, ["-t", "output", "-s", name]);
 
-const isCastDevice = (n) => /multi-output/i.test(n) || /blackhole/i.test(n);
+const isMulti = (n) => /multi-output/i.test(n);
+const isCastDevice = (n) => isMulti(n) || /blackhole/i.test(n);
 
-// Multi-Output wins when it exists: it sends the same audio to BlackHole *and*
-// the speakers, so this Mac is not silenced while casting.
-const rank = (n) => (/multi-output/i.test(n) ? 0 : 1);
-
-export const findCastDevice = (bin) =>
-  listOutputs(bin).filter(isCastDevice).sort((a, b) => rank(a) - rank(b))[0];
+// Plain BlackHole by default: the audio goes to the Chromecast and nowhere else,
+// which is what casting to a speaker in another room should sound like. A
+// Multi-Output Device plays it here as well - useful, but only when asked for,
+// since hearing the room twice a few seconds apart is worse than not hearing it.
+// Either way, fall back to whichever of the two actually exists.
+export function findCastDevice(bin, keepLocal = false) {
+  const devices = listOutputs(bin).filter(isCastDevice);
+  const wanted = devices.filter((n) => (keepLocal ? isMulti(n) : !isMulti(n)));
+  return wanted[0] ?? devices[0];
+}
 
 // Where to go back to: whatever was selected before, unless that was itself a
 // cast device (a previous run left it there) - then the first real one.

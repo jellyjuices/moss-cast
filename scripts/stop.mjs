@@ -2,6 +2,7 @@ import { setTimeout as sleep } from "node:timers/promises";
 import { rmSync } from "node:fs";
 import { CONTROL_PIPE } from "./lib/config.mjs";
 import { findOutputSwitcher, setOutput } from "./lib/audio/output.mjs";
+import { stopAudioServers } from "./lib/audio/server.mjs";
 import { color } from "./lib/terminal/ansi.mjs";
 import * as session from "./lib/session.mjs";
 
@@ -10,8 +11,14 @@ const SHUTDOWN_POLL_ATTEMPTS = 40;
 
 const state = session.read();
 
+// Swept even with no session on record: a server left behind by a crash holds
+// the stream port, and the next launch would connect the speaker to it.
 if (!state) {
-  console.log(color.yellow("Nothing is casting."));
+  const strays = stopAudioServers();
+  console.log(strays.length
+    ? `${color.green("Stopped")} an audio server left running with no session.`
+    : color.yellow("Nothing is casting."));
+  rmSync(CONTROL_PIPE, { force: true });
   process.exit(0);
 }
 
@@ -31,8 +38,7 @@ if (session.isProcessAlive(state.supervisorPid)) {
   try { process.kill(state.supervisorPid, "SIGKILL"); } catch {}
 }
 
-if (session.isProcessAlive(state.pid)) {
-  try { process.kill(state.pid, "SIGKILL"); } catch {}
+if (stopAudioServers().length) {
   console.log(`${color.green("Stopped")} the audio server`);
 }
 
